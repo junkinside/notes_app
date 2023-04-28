@@ -1,9 +1,8 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const asyncHandler = require('express-async-handler');
 
-const login = asyncHandler(async (req, res) => {
+const login = async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -28,13 +27,13 @@ const login = asyncHandler(async (req, res) => {
       },
     },
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: '1m' }
+    { expiresIn: '15m' }
   );
 
   const refreshToken = jwt.sign(
     { username: foundUser.username },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: '1d' }
+    { expiresIn: '7d' }
   );
 
   res.cookie('jwt', refreshToken, {
@@ -45,7 +44,7 @@ const login = asyncHandler(async (req, res) => {
   });
 
   res.json({ accessToken });
-});
+};
 
 const refresh = (req, res) => {
   const cookies = req.cookies;
@@ -57,7 +56,7 @@ const refresh = (req, res) => {
   jwt.verify(
     refreshToken,
     process.env.REFRESH_TOKEN_SECRET,
-    asyncHandler(async (err, decoded) => {
+    async (err, decoded) => {
       if (err) return res.status(403).json({ message: 'Forbidden' });
 
       const foundUser = await User.findOne({ username: decoded.username });
@@ -72,11 +71,11 @@ const refresh = (req, res) => {
           },
         },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: '1m' }
+        { expiresIn: '15m' }
       );
 
       res.json({ accessToken });
-    })
+    }
   );
 };
 
